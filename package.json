@@ -1,0 +1,20 @@
+{
+  "name": "uber-ai-agent",
+  "version": "1.0.0",
+  "description": "I will be creating a Al Agent that alerts drivers if the trip they are picking is going to a high risk area,",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
+    "csv-parser": "^3.2.0",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3",
+    "twilio": "^5.5.1"
+  }
+}

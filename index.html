@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uber safety AI Agent</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>🔍 Check Area Risk</h1>
+    <input class="Uber" type="text" id="postalCode" placeholder="Enter postal code (e.g., 7764)">
+    <button onclick="checkRisk()">Check</button>
+    <div id="result"></div>
+  
+    <script>
+      async function checkRisk() {
+        const postalCode = document.getElementById('postalCode').value;
+        const response = await fetch(`http://localhost:3000/check-risk/${postalCode}`);
+        const data = await response.json();
+  
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = data.error 
+          ? `<p style="color: red;">${data.error}</p>`
+          : `
+            <h3>${data.suburb}</h3>
+            <p>Gang Activity: <strong>${data.gang_activity_level}</strong></p>
+            <p>Crime Level: <strong>${data.crime_level}/5</strong></p>
+          `;
+      }
+    </script>
+</body>
+</html>
