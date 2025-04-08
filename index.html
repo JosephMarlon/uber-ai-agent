@@ -18,7 +18,8 @@
             const resultDiv = document.getElementById('result');
             
             try {
-                const response = await fetch(`http://localhost:3000/check-risk/${postalCode}`);
+              const response = await fetch(`http://localhost:5000/check-risk/${postalCode}`);
+                
                 if (!response.ok) throw new Error('Postal code not found');
                 
                 const data = await response.json();

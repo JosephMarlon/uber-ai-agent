@@ -7,7 +7,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = 4000;
+const PORT = 5000;
 let riskData = [];
 
 // Middleware
@@ -70,4 +70,6 @@ cron.schedule('0 8 * * *', () => {
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+}) .on('error', (err) =>{
+  console.error('Server failed to start :',err.message);
 });

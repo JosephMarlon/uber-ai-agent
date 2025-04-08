@@ -31,4 +31,19 @@ async function scrapeCrimeData() {
   }
 }
 
+// server.js - Add this function
+function reloadCSVData() {
+  riskData = [];
+  fs.createReadStream('crime_data.csv')
+    .pipe(csv())
+    .on('data', (row) => riskData.push(row))
+    .on('end', () => console.log('Data reloaded'));
+}
+
+// Update cron job to reload data after scraping
+cron.schedule('0 8 * * *', async () => {
+  await require('./scraper')();
+  reloadCSVData();
+});
+
 scrapeCrimeData();
