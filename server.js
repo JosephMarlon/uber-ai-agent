@@ -13,43 +13,58 @@ let riskData = [];
 // ======== CORS CONFIGURATION ========
 const corsOptions = {
   origin: 'http://127.0.0.1:5500',
-  methods: ['GET', 'POST']
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true
 };
 
-// Middleware
-app.use(cors());
+// Handle preflight requests first
+app.options('*', cors(corsOptions));
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// ======== ESSENTIAL MIDDLEWARE ========
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Load CSV data
-fs.createReadStream('crime_data.csv')
-  .pipe(csv())
-  .on('data', (row) => riskData.push(row))
-  .on('end', () => {
-    console.log(`Loaded ${riskData.length} crime records`);
-  });
+// ======== DATA LOADING ========
+const loadCSVData = () => {
+  riskData = [];
+  fs.createReadStream('crime_data.csv')
+    .pipe(csv())
+    .on('data', (row) => {
+      // Convert numeric fields
+      row.crime_level = parseInt(row.crime_level) || 0;
+      riskData.push(row);
+    })
+    .on('end', () => console.log(`Loaded ${riskData.length} crime records`))
+    .on('error', (err) => {
+      console.error('CSV load error:', err);
+      process.exit(1);
+    });
+};
 
-// Twilio client
+loadCSVData();
+
+// ======== TWILIO CLIENT ========
 const client = twilio(
   process.env.TWILIO_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
-// Allow requests from your frontend origin
-app.use(cors({
-  origin: 'http://127.0.0.1:5500', // Explicitly allow your Live Server port
-  methods: ['GET', 'POST']
-}));
 
-// API endpoints
+// ======== API ENDPOINTS ========
 app.get('/check-risk/:postalCode', (req, res) => {
-  const area = riskData.find(a => a.postal_code === req.params.postalCode);
-  res.json(area || { error: "Postal code not found" });
+  const areas = riskData.filter(a => a.postal_code === req.params.postalCode);
+  if (areas.length === 0) {
+    return res.status(404).json({ error: "Postal code not found" });
+  }
+  res.json(areas);
 });
 
 app.post('/whatsapp', async (req, res) => {
   try {
-    const incomingMsg = req.body.Body.trim();
-    const postalCode = incomingMsg;
+    const postalCode = req.body.Body.trim();
     const area = riskData.find(a => a.postal_code === postalCode);
 
     if (!area) {
@@ -74,14 +89,20 @@ app.post('/whatsapp', async (req, res) => {
   }
 });
 
-// Cron job
+// ======== CRON JOB ========
 cron.schedule('0 8 * * *', () => {
-  require('./scraper');
+  try {
+    require('./scraper');
+    loadCSVData(); // Reload data after scraping
+  } catch (err) {
+    console.error('Cron job error:', err);
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-}) .on('error', (err) =>{
-  console.error('Server failed to start :',err.message);
+// ======== SERVER START ========
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+}).on('error', (err) => {
+  console.error('❌ Server failed to start:', err.message);
+  process.exit(1);
 });
-

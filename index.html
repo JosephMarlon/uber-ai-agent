@@ -13,29 +13,68 @@
     <div id="result"></div>
 
     <script>
-        async function checkRisk() {
-            const postalCode = document.getElementById('postalCode').value;
-            const resultDiv = document.getElementById('result');
-            
-            try {
-              const response = await fetch(`http://localhost:5000/check-risk/${postalCode}`);
-                
-                if (!response.ok) throw new Error('Postal code not found');
-                
-                const data = await response.json();
-                
-                resultDiv.innerHTML = `
-                    <div class="result-box">
-                        <h3>${data.suburb}</h3>
-                        <p>📊 Crime Level: <strong>${data.crime_level}/5</strong></p>
-                        <p>🔫 Gang Activity: <strong>${data.gang_activity_level}</strong></p>
-                        <p>📝 Notes: <em>${data.notes}</em></p>
-                    </div>
-                `;
-            } catch (error) {
-                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
-            }
+      async function checkRisk() {
+        const postalCode = document.getElementById('postalCode').value;
+        const resultDiv = document.getElementById('result');
+        
+        // Clear previous results
+        resultDiv.innerHTML = '<div class="loading">🔍 Searching...</div>';
+      
+        try {
+          // Test basic connection first
+          const ping = await fetch('http://localhost:5000');
+          if (!ping.ok) throw new Error('Server offline');
+      
+          // Main request
+          const response = await fetch(`http://localhost:5000/check-risk/${postalCode}`, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+      
+          const data = await response.json();
+      
+          if (data.error) {
+            resultDiv.innerHTML = `<div class="error">⚠️ ${data.error}</div>`;
+            return;
+          }
+      
+          // Successful response
+          resultDiv.innerHTML = data.map(area => `
+            <div class="result-box">
+              <h3>${area.suburb}</h3>
+              <div class="crime-level" data-level="${area.crime_level}">
+                Crime Level: ${area.crime_level}/5
+              </div>
+              <p>🔫 ${area.gang_activity_level} Gang Activity</p>
+              <p class="notes">📝 ${area.notes}</p>
+            </div>
+          `).join('');
+      
+          // Dynamic coloring
+          document.querySelectorAll('.crime-level').forEach(el => {
+            const level = parseInt(el.dataset.level);
+            el.style.backgroundColor = 
+              level >= 4 ? '#ff4444' : 
+              level >= 2 ? '#ffdd33' : 
+              '#4CAF50';
+          });
+      
+        } catch (err) {
+          console.error('🚨 Critical Error:', err);
+          resultDiv.innerHTML = `
+            <div class="error">
+              <p>🚨 Connection Failed</p>
+              <p>${err.message}</p>
+              <small>Verify:
+                <ul>
+                  <li>Server running on port 5000</li>
+                  <li>No browser extensions blocking requests</li>
+                  <li>Correct URL in fetch call</li>
+                </ul>
+              </small>
+            </div>
+          `;
         }
-    </script>
+      }
+      </script>
 </body>
 </html>
