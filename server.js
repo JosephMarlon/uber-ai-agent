@@ -10,6 +10,12 @@ const app = express();
 const PORT = 5000;
 let riskData = [];
 
+// ======== CORS CONFIGURATION ========
+const corsOptions = {
+  origin: 'http://127.0.0.1:5500',
+  methods: ['GET', 'POST']
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -28,6 +34,11 @@ const client = twilio(
   process.env.TWILIO_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
+// Allow requests from your frontend origin
+app.use(cors({
+  origin: 'http://127.0.0.1:5500', // Explicitly allow your Live Server port
+  methods: ['GET', 'POST']
+}));
 
 // API endpoints
 app.get('/check-risk/:postalCode', (req, res) => {
@@ -73,3 +84,4 @@ app.listen(PORT, () => {
 }) .on('error', (err) =>{
   console.error('Server failed to start :',err.message);
 });
+
