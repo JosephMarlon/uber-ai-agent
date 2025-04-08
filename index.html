@@ -3,30 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uber safety AI Agent</title>
+    <title>Uber Safety AI Agent</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>🔍 Check Area Risk</h1>
+    <h1>🔍Uber Cape Town Area Risk Check</h1>
     <input class="Uber" type="text" id="postalCode" placeholder="Enter postal code (e.g., 7764)">
     <button onclick="checkRisk()">Check</button>
     <div id="result"></div>
-  
+
     <script>
-      async function checkRisk() {
-        const postalCode = document.getElementById('postalCode').value;
-        const response = await fetch(`http://localhost:3000/check-risk/${postalCode}`);
-        const data = await response.json();
-  
-        const resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = data.error 
-          ? `<p style="color: red;">${data.error}</p>`
-          : `
-            <h3>${data.suburb}</h3>
-            <p>Gang Activity: <strong>${data.gang_activity_level}</strong></p>
-            <p>Crime Level: <strong>${data.crime_level}/5</strong></p>
-          `;
-      }
+        async function checkRisk() {
+            const postalCode = document.getElementById('postalCode').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch(`http://localhost:3000/check-risk/${postalCode}`);
+                if (!response.ok) throw new Error('Postal code not found');
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result-box">
+                        <h3>${data.suburb}</h3>
+                        <p>📊 Crime Level: <strong>${data.crime_level}/5</strong></p>
+                        <p>🔫 Gang Activity: <strong>${data.gang_activity_level}</strong></p>
+                        <p>📝 Notes: <em>${data.notes}</em></p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
     </script>
 </body>
 </html>
